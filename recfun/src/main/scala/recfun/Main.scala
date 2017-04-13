@@ -29,7 +29,7 @@ object Main {
         else
           if (chars.head == '(') balanced(chars.tail, isOpen + 1)
         else
-          if (chars.head == ')') isOpen> 0 && balanced(chars.tail, isOpen - 1)
+          if (chars.head == ')') isOpen > 0 && balanced(chars.tail, isOpen - 1)
         else balanced(chars.tail, isOpen)
       }
       balanced(chars,0)
