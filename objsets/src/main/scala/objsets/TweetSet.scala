@@ -104,9 +104,9 @@ abstract class TweetSet {
    * and be implemented in the subclasses?
    */
 
-    def descendingByRetweet: Trending = descendingByRetweetAcc(new EmptyTrending)
+    def descendingByRetweet: TweetList = descendingByRetweetAcc(new EmptyTrending)
 
-    def descendingByRetweetAcc(acc: Trending): Trending = {
+    def descendingByRetweetAcc(acc: TweetList): TweetList = {
       if (isEmpty) acc
       else {
         val max = mostRetweeted
@@ -206,10 +206,10 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
   }
 }
 
-abstract class Trending {
-  def + (tw: Tweet): Trending
+abstract class TweetList {
+  def + (tw: Tweet): TweetList
   def head: Tweet
-  def tail: Trending
+  def tail: TweetList
   def isEmpty: Boolean
   def foreach(f: Tweet => Unit): Unit = {
     if (!this.isEmpty) {
@@ -219,41 +219,58 @@ abstract class Trending {
   }
 }
 
-class EmptyTrending extends Trending {
+class EmptyTrending extends TweetList {
   def + (tw: Tweet) = new NonEmptyTrending(tw, new EmptyTrending)
   def head: Tweet = throw new Exception
-  def tail: Trending = throw new Exception
+  def tail: TweetList = throw new Exception
   def isEmpty: Boolean = true
   override def toString = "EmptyTrending"
 }
 
-class NonEmptyTrending(elem: Tweet, next: Trending) extends Trending {
+class NonEmptyTrending(elem: Tweet, next: TweetList) extends TweetList {
   /** Appends tw to the end of this sequence.
     */
-  def + (tw: Tweet): Trending =
+  def +(tw: Tweet): TweetList =
     new NonEmptyTrending(elem, next + tw)
+
   def head: Tweet = elem
-  def tail: Trending = next
+
+  def tail: TweetList = next
+
   def isEmpty: Boolean = false
+
   override def toString =
     "NonEmptyTrending(" + elem.retweets + ", " + next + ")"
-
+}
 
 object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
 
-    lazy val googleTweets: TweetSet = ???
-    lazy val appleTweets: TweetSet = ???
+    lazy val googleTweets: TweetSet = TweetReader
+      .allTweets
+      .filter(
+        tw => google.exists(
+          kw => tw.text contains kw
+        )
+      )
+    lazy val appleTweets: TweetSet = TweetReader
+      .allTweets
+      .filter(
+        tw => apple.exists(
+          kw => tw.text contains kw
+        )
+      )
   
   /**
    * A list of all tweets mentioning a keyword from either apple or google,
    * sorted by the number of retweets.
    */
-     lazy val trending: Trending = ???
+     lazy val trending: TweetList = googleTweets union appleTweets descendingByRetweet
   }
 
 object Main extends App {
   // Print the trending tweets
+  println("Trending tweets:")
   GoogleVsApple.trending foreach println
 }
